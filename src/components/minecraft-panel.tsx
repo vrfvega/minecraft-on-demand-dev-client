@@ -13,8 +13,13 @@ export default function MinecraftPanel() {
   const [pollInterval, setPollInterval] = useState(5000)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
 
+  const initialServerStatus = () => {
+    const storedStatus = localStorage.getItem('serverStatus');
+    return storedStatus ? JSON.parse(storedStatus) : undefined;
+  };
+
   const {
-    data: serverStatus,
+    data: serverStatus = initialServerStatus(),
     isLoading: isLoadingStatus,
     error: statusError,
     refetch: refetchStatus,
@@ -29,11 +34,16 @@ export default function MinecraftPanel() {
       if (retryAfter) {
         setPollInterval(Number.parseInt(retryAfter) * 1000)
       }
-      setLastUpdate(new Date())
-      return response.json()
+      const data = await response.json();
+
+      localStorage.setItem('serverStatus', JSON.stringify(data));
+      setLastUpdate(new Date());
+      return data;
     },
     refetchInterval: pollInterval,
   })
+
+  const isLoading = isLoadingStatus && !serverStatus;
 
   // Debug logging for polling
   useEffect(() => {
@@ -108,15 +118,15 @@ export default function MinecraftPanel() {
                       isRunning ? "bg-green-500" : isStarting ? "bg-yellow-500" : "bg-gray-500"
                     }`}
                   />
-                  {isLoadingStatus ? "Checking..." : serverStatus?.taskStatus || "UNKNOWN"}
+                  {isLoading ? "Loading..." : serverStatus?.taskStatus || "UNKNOWN"}
                 </span>
               </div>
-              {serverStatus?.serverIp && (
+              {isRunning || serverStatus?.taskStatus === "PENDING" ? (
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium text-muted-foreground">Server IP</span>
-                  <div className="p-2 bg-muted rounded-md font-mono text-sm break-all">{serverStatus.serverIp}</div>
+                  <div className="p-2 bg-muted rounded-md font-mono text-sm break-all">{serverStatus?.serverIp}</div>
                 </div>
-              )}
+              ) : null}
               <div className="mt-2 text-xs text-muted-foreground">Last updated: {lastUpdate.toLocaleTimeString()}</div>
             </div>
           </div>
