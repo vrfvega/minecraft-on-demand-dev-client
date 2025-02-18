@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useQuery, useMutation } from "@tanstack/react-query"
-import { Loader2, Server, Power, RefreshCcw } from "lucide-react"
+import { Loader2, Server, Power, RefreshCcw, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
@@ -11,6 +11,7 @@ import { ApiError, ServerStatus } from "@/types/types"
 export default function MinecraftPanel() {
   const { toast } = useToast()
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  const [copied, setCopied] = useState(false)
   const pollTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const initialServerStatus = () => {
@@ -119,6 +120,18 @@ export default function MinecraftPanel() {
     },
   })
 
+  const handleCopy = async () => {
+    if (serverStatus?.serverIp) {
+      await navigator.clipboard.writeText(serverStatus.serverIp)
+      setCopied(true)
+      toast({
+        title: "Copied",
+        description: "IP address copied to clipboard",
+      })
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4 flex items-center justify-center">
         <Card className="w-full max-w-md border-t-4 border-primary shadow-2xl">
@@ -164,9 +177,23 @@ export default function MinecraftPanel() {
                 </div>
                 <div className="pb-4 flex items-center justify-between">
                   <span className="text-sm font-medium">IP Address</span>
-                  <span className="inline-flex px-3 py-1 text-xs font-medium">
-                    {serverStatus?.serverIp}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex px-3 py-1 text-xs font-medium">
+                      {serverStatus?.serverIp}
+                    </span>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleCopy}
+                        className="h-8 w-8"
+                        disabled={!serverStatus?.serverIp}
+                    >
+                      {copied ?
+                          <Check className="w-4 h-4 text-green-500" /> :
+                          <Copy className="w-4 h-4" />
+                      }
+                    </Button>
+                  </div>
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
                   Last updated: {lastUpdate.toLocaleTimeString()}
