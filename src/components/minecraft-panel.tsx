@@ -74,8 +74,18 @@ export default function MinecraftPanel() {
 
   const startMutation = useMutation({
     mutationFn: async () => {
+      const taskInput = {
+        type: "VANILLA",
+        version: "1.20.1",
+        datapacks: ""
+      }
+
       const response = await fetch("https://ag3x118ir8.execute-api.us-east-1.amazonaws.com/alpha/start", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ taskInput })
       })
       if (!response.ok) {
         throw { status: response.status, message: "Failed to start server" }
@@ -178,9 +188,9 @@ export default function MinecraftPanel() {
                 <div className="pb-4 flex items-center justify-between">
                   <span className="text-sm font-medium">IP Address</span>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex px-3 py-1 text-xs font-medium">
-                      {serverStatus?.serverIp}
-                    </span>
+                  <span className="inline-flex px-3 py-1 text-xs font-medium">
+                    {serverStatus?.serverIp}
+                  </span>
                     <Button
                         variant="ghost"
                         size="icon"
