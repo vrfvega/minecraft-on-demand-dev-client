@@ -11,8 +11,8 @@ export default function ServerInfo() {
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const isRunning = status?.taskStatus === 'RUNNING'
-  const isStarting = status?.taskStatus === 'PENDING'
+  const isRunning = status?.taskStatus === 'Running'
+  const isStarting = status?.taskStatus === 'Pending'
 
   const checkStatus = async () => {
     setIsLoading(true)
@@ -26,10 +26,7 @@ export default function ServerInfo() {
         setStatus(result.data)
         setError(null)
 
-        // Set up polling if task is not in terminal state
-        if (result.data.taskStatus !== "RUNNING") {
-          setTimeout(checkStatus, (result.retryAfter || 5) * 1000)
-        }
+        setTimeout(checkStatus, (result.retryAfter || 30) * 1000)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to check status')
