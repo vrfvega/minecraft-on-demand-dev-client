@@ -42,8 +42,8 @@ export default function ServerStartForm() {
             break
           case 'CONFLICT':
             toast({
-              title: "Server is already running",
-              description: "Please wait for the server to stop before starting it again.",
+              title: "Server is busy",
+              description: "A server instance is currently active. Wait for it to stop or stop it manually.",
               variant: "destructive",
             })
             break
@@ -60,8 +60,8 @@ export default function ServerStartForm() {
 
       if (result.success) {
         toast({
-          title: "Server starting",
-          description: "The server is now starting up...",
+          title: "Request accepted",
+          description: "Server startup initiated. This may take a few minutes...",
         })
       }
     })
@@ -214,6 +214,3 @@ export default function ServerStartForm() {
     </form>
   )
 }
-
-// https://drive.google.com/uc?export=download&id=1a852XMDyQ_WHCzVq0CxPieTSEZ288ssK
-// https://drive.google.com/uc?export=download&id=1XCG7lpJs7Ptlj_TIOHqb2_e9IZpKTzWf
