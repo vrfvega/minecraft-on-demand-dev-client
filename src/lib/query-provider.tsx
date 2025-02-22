@@ -12,9 +12,7 @@ export default function QueryProvider({
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Disable automatic background refetching
-            staleTime: Infinity,
-            // Disable retries on error
+            refetchOnWindowFocus: false,
             retry: false,
           },
         },
