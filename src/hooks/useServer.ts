@@ -44,11 +44,9 @@ export const useCheckServerStatus = () => {
   return useQuery<StatusResponse>({
     queryKey: ['serverStatus'],
     queryFn: checkServerStatus,
+    refetchIntervalInBackground: false,
     refetchInterval: (query) => {
       const data = query.state.data as StatusResponse | undefined;
-      if (data?.data?.taskStatus === "Running") {
-        return false;
-      }
       return data?.retryAfter ? data.retryAfter * 1000 : 15 * 1000;
     },
     retry: (failureCount, error) => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { Loader2, Power, Plus, X } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
@@ -12,12 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select"
-import { startServer } from '@/app/actions/start'
 import { useToast } from '@/hooks/use-toast'
+import { useStartServer } from '@/hooks/useServerStart'
 
 export default function ServerStartForm() {
-  const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
+  const { mutate: startServer, isPending } = useStartServer()
 
   const [serverType, setServerType] = useState<"VANILLA" | "FABRIC">("VANILLA")
   const [datapacks, setDatapacks] = useState<string[]>([])
@@ -25,46 +25,53 @@ export default function ServerStartForm() {
   const [newDatapack, setNewDatapack] = useState('')
   const [newMod, setNewMod] = useState('')
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    startTransition(async () => {
-      const result = await startServer(serverType, datapacks, mods)
+    startServer(
+      {
+        serverType,
+        datapacks,
+        mods
+      },
+      {
+        onSuccess: (result) => {
+          if (result.error) {
+            switch (result.error.type) {
+              case 'VALIDATION':
+                toast({
+                  title: "Validation Error",
+                  description: result.error.message,
+                  variant: "destructive",
+                })
+                break
+              case 'CONFLICT':
+                toast({
+                  title: "Server is busy",
+                  description: "A server instance is currently active. Wait for it to stop or stop it manually.",
+                  variant: "destructive",
+                })
+                break
+              case 'SERVER':
+                toast({
+                  title: "Error",
+                  description: "Failed to start the server. Please try again.",
+                  variant: "destructive",
+                })
+                break
+            }
+            return
+          }
 
-      if (result.error) {
-        switch (result.error.type) {
-          case 'VALIDATION':
+          if (result.success) {
             toast({
-              title: "Validation Error",
-              description: result.error.message,
-              variant: "destructive",
+              title: "Request accepted",
+              description: "Server startup initiated. This may take a few minutes...",
             })
-            break
-          case 'CONFLICT':
-            toast({
-              title: "Server is busy",
-              description: "A server instance is currently active. Wait for it to stop or stop it manually.",
-              variant: "destructive",
-            })
-            break
-          case 'SERVER':
-            toast({
-              title: "Error",
-              description: "Failed to start the server. Please try again.",
-              variant: "destructive",
-            })
-            break
+          }
         }
-        return
       }
-
-      if (result.success) {
-        toast({
-          title: "Request accepted",
-          description: "Server startup initiated. This may take a few minutes...",
-        })
-      }
-    })
+    )
   }
 
   function handleAddDatapack() {
