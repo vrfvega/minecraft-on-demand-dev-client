@@ -1,40 +1,17 @@
 'use client'
-
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from "./ui/button"
 import { Check, Copy, RefreshCcw } from "lucide-react"
-import { checkServerStatus, type ServerStatus } from '@/app/actions/status'
+import { useCheckServerStatus } from '@/hooks/useServer'
 
 export default function ServerInfo() {
-  const [status, setStatus] = useState<ServerStatus | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const { data: response, isLoading, refetch } = useCheckServerStatus()
 
+  const status = response?.data
+  const error = response?.error
   const isRunning = status?.taskStatus === 'Running'
   const isStarting = status?.taskStatus === 'Pending'
-
-  const checkStatus = async () => {
-    setIsLoading(true)
-    try {
-      const result = await checkServerStatus()
-
-      if (result.error) {
-        setError(result.error)
-        setStatus(null)
-      } else if (result.data) {
-        setStatus(result.data)
-        setError(null)
-
-        setTimeout(checkStatus, (result.retryAfter || 30) * 1000)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to check status')
-      setStatus(null)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleCopy = async () => {
     if (status?.serverIp) {
@@ -43,10 +20,6 @@ export default function ServerInfo() {
       setTimeout(() => setCopied(false), 2000)
     }
   }
-
-  useEffect(() => {
-    checkStatus()
-  }, [])
 
   return (
     <div className="space-y-4">
@@ -75,7 +48,7 @@ export default function ServerInfo() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={checkStatus}
+              onClick={() => refetch()}
               disabled={isLoading}
               className="h-8 w-8"
             >
@@ -83,7 +56,6 @@ export default function ServerInfo() {
             </Button>
           </div>
         </div>
-
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">IP Address</span>
           <div className="flex items-center gap-2">

@@ -1,11 +1,13 @@
 import ServerInfo from "@/components/server-info";
 import ServerStartForm from "@/components/server-start-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import QueryProvider from "@/lib/query-provider";
 import { Server } from "lucide-react";
 
 
 export default function Page() {
   return (
+    <QueryProvider>
       <div
         className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4 flex items-center justify-center">
         <Card className="w-full max-w-md border-t-4 border-primary shadow-2xl">
@@ -22,5 +24,6 @@ export default function Page() {
           </CardContent>
         </Card>
       </div>
+    </QueryProvider>
   )
 }
