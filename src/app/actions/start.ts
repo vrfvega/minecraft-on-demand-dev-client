@@ -51,7 +51,7 @@ export async function startServer(
 
     // Start server request
     const response = await fetch(
-      "https://ag3x118ir8.execute-api.us-east-1.amazonaws.com/alpha/start",
+      "https://ab5pvvj6bg.execute-api.us-east-1.amazonaws.com/alpha/start",
       {
         method: "POST",
         headers: {
@@ -75,7 +75,7 @@ export async function startServer(
 
     // Get retry timing from status endpoint
     const statusResponse = await fetch(
-      "https://ag3x118ir8.execute-api.us-east-1.amazonaws.com/alpha/status"
+      "https://ab5pvvj6bg.execute-api.us-east-1.amazonaws.com/alpha/status"
     )
 
     const retryAfter = statusResponse.ok

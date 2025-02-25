@@ -14,7 +14,7 @@ export type StatusResponse = {
 export async function checkServerStatus(): Promise<StatusResponse> {
   try {
     const response = await fetch(
-      "https://ag3x118ir8.execute-api.us-east-1.amazonaws.com/alpha/status",
+      "https://ab5pvvj6bg.execute-api.us-east-1.amazonaws.com/alpha/status",
       {
         cache: 'no-store',
         headers: {
