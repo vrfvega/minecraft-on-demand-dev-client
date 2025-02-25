@@ -154,7 +154,7 @@ export default function ServerStartForm() {
 
         {serverType === "FABRIC" && (
           <div className="space-y-2">
-            <Label>Mods</Label>
+            <Label>Modpack</Label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input

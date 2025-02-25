@@ -8,7 +8,7 @@ const taskInputSchema = z.object({
   type: z.enum(["VANILLA", "FABRIC"]),
   version: z.string(),
   datapacks: z.string().optional(),
-  mods: z.string().optional(),
+  modpack: z.string().optional(),
 })
 
 type TaskInput = z.infer<typeof taskInputSchema>
@@ -25,14 +25,14 @@ export type StartServerResponse = {
 export async function startServer(
   serverType: "VANILLA" | "FABRIC",
   datapacks: string[],
-  mods: string[]
+  modpack: string[]
 ): Promise<StartServerResponse> {
   try {
     const taskInput: TaskInput = {
       type: serverType,
       version: "1.20.1",
       datapacks: datapacks.length > 0 ? datapacks.join(",") : "",
-      mods: mods.length > 0 ? mods.join(",") : "",
+      modpack: modpack.length > 0 ? modpack.join(",") : "",
     }
 
     // Validate input
