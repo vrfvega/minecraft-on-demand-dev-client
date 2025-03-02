@@ -1,10 +1,9 @@
 export interface ServerStatus {
-  taskStatus: string
-  serverIp: string
+  taskStatus: string;
+  serverIp: string;
 }
 
 export interface ApiError {
-  message: string
-  status: number
+  message: string;
+  status: number;
 }
-

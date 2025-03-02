@@ -1,7 +1,7 @@
-'use server'
+"use server";
 
-import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 // Define the task input schema
 const taskInputSchema = z.object({
@@ -9,23 +9,23 @@ const taskInputSchema = z.object({
   version: z.string(),
   datapacks: z.string().optional(),
   modpack: z.string().optional(),
-})
+});
 
-type TaskInput = z.infer<typeof taskInputSchema>
+type TaskInput = z.infer<typeof taskInputSchema>;
 
 export type StartServerResponse = {
-  success?: boolean
+  success?: boolean;
   error?: {
-    type: 'VALIDATION' | 'CONFLICT' | 'SERVER'
-    message: string
-  }
-  retryAfter?: number
-}
+    type: "VALIDATION" | "CONFLICT" | "SERVER";
+    message: string;
+  };
+  retryAfter?: number;
+};
 
 export async function startServer(
   serverType: "VANILLA" | "FABRIC",
   datapacks: string[],
-  modpack: string[]
+  modpack: string[],
 ): Promise<StartServerResponse> {
   try {
     const taskInput: TaskInput = {
@@ -33,19 +33,19 @@ export async function startServer(
       version: "1.20.1",
       datapacks: datapacks.length > 0 ? datapacks.join(",") : "",
       modpack: modpack.length > 0 ? modpack.join(",") : "",
-    }
+    };
 
     // Validate input
     try {
-      taskInputSchema.parse(taskInput)
+      taskInputSchema.parse(taskInput);
     } catch (err) {
       if (err instanceof z.ZodError) {
         return {
           error: {
-            type: 'VALIDATION',
-            message: err.errors[0].message
-          }
-        }
+            type: "VALIDATION",
+            message: err.errors[0].message,
+          },
+        };
       }
     }
 
@@ -58,45 +58,43 @@ export async function startServer(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ taskInput }),
-      }
-    )
+      },
+    );
 
     if (!response.ok) {
       if (response.status === 409) {
         return {
           error: {
-            type: 'CONFLICT',
-            message: "Server is already running"
-          }
-        }
+            type: "CONFLICT",
+            message: "Server is already running",
+          },
+        };
       }
-      throw new Error("Failed to start server")
+      throw new Error("Failed to start server");
     }
 
     // Get retry timing from status endpoint
     const statusResponse = await fetch(
-      "https://ab5pvvj6bg.execute-api.us-east-1.amazonaws.com/alpha/status"
-    )
+      "https://ab5pvvj6bg.execute-api.us-east-1.amazonaws.com/alpha/status",
+    );
 
     const retryAfter = statusResponse.ok
       ? statusResponse.headers.get("Retry-After")
-      : null
+      : null;
 
-    revalidatePath('/server') // Adjust this path as needed
+    revalidatePath("/server"); // Adjust this path as needed
 
     return {
       success: true,
-      retryAfter: retryAfter ? parseInt(retryAfter, 10) : undefined
-    }
-
+      retryAfter: retryAfter ? parseInt(retryAfter, 10) : undefined,
+    };
   } catch (error) {
     return {
       error: {
-        type: 'SERVER',
-        message: error instanceof Error
-          ? error.message
-          : "Failed to start server"
-      }
-    }
+        type: "SERVER",
+        message:
+          error instanceof Error ? error.message : "Failed to start server",
+      },
+    };
   }
 }
