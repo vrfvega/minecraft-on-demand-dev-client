@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Loader2, Power, Plus, X } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Power, Plus, X, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -12,80 +12,128 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useStartServer } from "@/hooks/useServerStart";
+import { z } from "zod";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
-import { startServer } from "@/app/actions/start";
-import { useToast } from "@/hooks/use-toast";
+
+// Zod schemas for validation
+const urlSchema = z.string().url().optional().or(z.literal(""));
 
 export default function ServerStartForm() {
-  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const { mutate: startServer, isPending } = useStartServer();
 
   const [serverType, setServerType] = useState<"VANILLA" | "FABRIC">("FABRIC");
   const [datapacks, setDatapacks] = useState<string[]>([]);
-  const [mods, setMods] = useState<string[]>([]);
+  const [modpack, setModPack] = useState<string>("");
   const [newDatapack, setNewDatapack] = useState("");
-  const [newMod, setNewMod] = useState("");
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Validation error states
+  const [newDatapackError, setNewDatapackError] = useState<string | null>(null);
+  const [modpackError, setModpackError] = useState<string | null>(null);
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    startTransition(async () => {
-      const result = await startServer(serverType, datapacks, mods);
+    startServer(
+      {
+        serverType,
+        dataPacks: datapacks,
+        modPack: modpack,
+      },
+      {
+        onSuccess: (result) => {
+          if (result.error) {
+            switch (result.error.type) {
+              case "VALIDATION":
+                toast({
+                  title: "Validation Error",
+                  description: result.error.message,
+                  variant: "destructive",
+                });
+                break;
+              case "CONFLICT":
+                toast({
+                  title: "Server is busy",
+                  description:
+                    "A server instance is currently active. Wait for it to stop or stop it manually.",
+                  variant: "destructive",
+                });
+                break;
+              case "SERVER":
+                toast({
+                  title: "Error",
+                  description: "Failed to start the server. Please try again.",
+                  variant: "destructive",
+                });
+                break;
+            }
+            return;
+          }
 
-      if (result.error) {
-        switch (result.error.type) {
-          case "VALIDATION":
+          if (result.success) {
             toast({
-              title: "Validation Error",
-              description: result.error.message,
-              variant: "destructive",
-            });
-            break;
-          case "CONFLICT":
-            toast({
-              title: "Server is busy",
+              title: "Request accepted",
               description:
-                "A server instance is currently active. Wait for it to stop or stop it manually.",
-              variant: "destructive",
+                "Server startup initiated. This may take a few minutes...",
             });
-            break;
-          case "SERVER":
-            toast({
-              title: "Error",
-              description: "Failed to start the server. Please try again.",
-              variant: "destructive",
-            });
-            break;
-        }
-        return;
-      }
-
-      if (result.success) {
-        toast({
-          title: "Request accepted",
-          description:
-            "Server startup initiated. This may take a few minutes...",
-        });
-      }
-    });
+          }
+        },
+      },
+    );
   }
 
-  function handleAddDatapack() {
-    if (newDatapack && !datapacks.includes(newDatapack)) {
-      setDatapacks([...datapacks, newDatapack]);
-      setNewDatapack("");
+  function validateDatapackUrl(url: string): boolean {
+    try {
+      // Skip validation if empty
+      if (!url.trim()) {
+        setNewDatapackError(null);
+        return true;
+      }
+
+      urlSchema.parse(url);
+      setNewDatapackError(null);
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setNewDatapackError("Please enter a valid URL");
+      }
+      return false;
     }
   }
 
-  function handleAddMod() {
-    if (newMod && !mods.includes(newMod)) {
-      setMods([...mods, newMod]);
-      setNewMod("");
+  function validateModpackUrl(url: string): boolean {
+    try {
+      // Skip validation if empty
+      if (!url.trim()) {
+        setModpackError(null);
+        return true;
+      }
+
+      urlSchema.parse(url);
+      setModpackError(null);
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setModpackError("Please enter a valid URL");
+      }
+      return false;
+    }
+  }
+
+  function handleAddDatapack() {
+    const isValid = validateDatapackUrl(newDatapack);
+
+    if (isValid && newDatapack.trim() && !datapacks.includes(newDatapack)) {
+      setDatapacks([...datapacks, newDatapack]);
+      setNewDatapack("");
+      setNewDatapackError(null);
     }
   }
 
@@ -93,13 +141,6 @@ export default function ServerStartForm() {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddDatapack();
-    }
-  }
-
-  function handleModKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddMod();
     }
   }
 
@@ -111,7 +152,7 @@ export default function ServerStartForm() {
           <AccordionContent>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="serverType">Type</Label>
+                <Label htmlFor="serverType">Server Type</Label>
                 <Select
                   value={serverType}
                   onValueChange={(value: "VANILLA" | "FABRIC") =>
@@ -134,17 +175,28 @@ export default function ServerStartForm() {
                   <div className="flex-1">
                     <Input
                       value={newDatapack}
-                      onChange={(e) => setNewDatapack(e.target.value)}
+                      onChange={(e) => {
+                        setNewDatapack(e.target.value);
+                        if (e.target.value) validateDatapackUrl(e.target.value);
+                      }}
+                      onBlur={() => validateDatapackUrl(newDatapack)}
                       onKeyDown={handleDatapackKeyDown}
-                      placeholder="Enter datapack URL"
+                      placeholder="Enter datapack(s) URL (optional)"
                       type="url"
+                      className={newDatapackError ? "border-red-500" : ""}
                     />
+                    {newDatapackError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        {newDatapackError}
+                      </p>
+                    )}
                   </div>
                   <Button
                     type="button"
                     size="icon"
                     onClick={handleAddDatapack}
-                    disabled={!newDatapack}
+                    disabled={!newDatapack || !!newDatapackError}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -177,41 +229,24 @@ export default function ServerStartForm() {
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Input
-                        value={newMod}
-                        onChange={(e) => setNewMod(e.target.value)}
-                        onKeyDown={handleModKeyDown}
-                        placeholder="Enter mod URL"
+                        value={modpack}
+                        onChange={(e) => {
+                          setModPack(e.target.value);
+                          if (e.target.value)
+                            validateModpackUrl(e.target.value);
+                        }}
+                        onBlur={() => validateModpackUrl(modpack)}
+                        placeholder="Enter modpack URL (optional)"
                         type="url"
+                        className={modpackError ? "border-red-500" : ""}
                       />
+                      {modpackError && (
+                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          {modpackError}
+                        </p>
+                      )}
                     </div>
-                    <Button
-                      type="button"
-                      size="icon"
-                      onClick={handleAddMod}
-                      disabled={!newMod}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {mods.map((mod, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 text-sm bg-muted p-2 rounded"
-                      >
-                        <span className="flex-1 truncate">{mod}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            setMods(mods.filter((_, i) => i !== index))
-                          }
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
                   </div>
                 </div>
               )}
