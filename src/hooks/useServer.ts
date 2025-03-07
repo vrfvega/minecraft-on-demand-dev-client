@@ -9,6 +9,7 @@ export type StatusResponse = {
   data?: ServerStatus;
   error?: string;
   retryAfter?: number;
+  cacheTimeRemaining?: number;
 };
 
 const checkServerStatus = async (): Promise<StatusResponse> => {
@@ -41,6 +42,9 @@ const checkServerStatus = async (): Promise<StatusResponse> => {
   }
 };
 
+/**
+ * @deprecated The method should only be used for internaltesting purposes
+ */
 export const useCheckServerStatus = () => {
   return useQuery<StatusResponse>({
     queryKey: ["serverStatus"],
