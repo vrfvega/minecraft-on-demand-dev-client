@@ -1,29 +1,32 @@
-import ServerInfo from "@/components/server-info";
-import ServerStartForm from "@/components/server-start-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import QueryProvider from "@/lib/query-provider";
-import { Server } from "lucide-react";
+import { LeftColumn } from "@/components/left-column";
+import { MiddleColumn } from "@/components/middle-column";
+import { RightColumn } from "@/components/right-column";
+import { PlayersInfo } from "@/types/types";
+import React from "react";
 
+const mockPlayersInfo: PlayersInfo = {
+  online: 3,
+  max: 20,
+  list: [
+    // { id: "a", name: "Player 1" },
+    // { id: "b", name: "Player 2" },
+    // { id: "c", name: "Player 3" },
+  ],
+};
 export default function Page() {
   return (
-    <QueryProvider>
-      <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md border-t-4 border-primary shadow-2xl">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Server className="w-5 h-5 text-primary" />
-              <CardTitle>Minecraft Server Admin</CardTitle>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Manage your Minecraft server instance
-            </p>
-          </CardHeader>
-          <CardContent>
-            <ServerInfo />
-            <ServerStartForm />
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-black text-white p-12">
+      <div className="max-w-full mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+        <div className="md:col-span-1 min-h-full">
+          <LeftColumn Players={mockPlayersInfo} />
+        </div>
+        <div className="md:col-span-1 min-h-full">
+          <MiddleColumn />
+        </div>
+        <div className="md:col-span-1 min-h-full">
+          <RightColumn />
+        </div>
       </div>
-    </QueryProvider>
+    </div>
   );
 }
