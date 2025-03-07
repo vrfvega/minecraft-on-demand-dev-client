@@ -1,29 +1,36 @@
+import { PlayerList } from "@/components/left-column";
+import { MiddleColumn } from "@/components/middle-column";
+import { ServerHeader } from "@/components/server-header";
 import ServerInfo from "@/components/server-info";
-import ServerStartForm from "@/components/server-start-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import QueryProvider from "@/lib/query-provider";
-import { Server } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import React from "react";
 
 export default function Page() {
   return (
-    <QueryProvider>
-      <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md border-t-4 border-primary shadow-2xl">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Server className="w-5 h-5 text-primary" />
-              <CardTitle>Minecraft Server Admin</CardTitle>
+    <div className="min-h-screen bg-black text-white p-12 space-y-4">
+      <ServerHeader />
+      <div className="max-w-full grid grid-cols-1 md:grid-rows-2 gap-4 h-full ">
+        <div className="grid grid-cols-2 min-h-full space-x-4">
+          <div className="grid grid-rows-4 space-y-4">
+            <Card className="bg-[#111] flex rounded-xl items-center overflow-hidden border-[#222]">
+              <CardContent className="p-4  w-full">
+                <ServerInfo />
+              </CardContent>
+            </Card>
+            <div className="row-span-3">
+              <PlayerList />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Manage your Minecraft server instance
-            </p>
-          </CardHeader>
-          <CardContent>
-            <ServerInfo />
-            <ServerStartForm />
-          </CardContent>
-        </Card>
+          </div>
+          <Card className="bg-[#111] rounded-xl overflow-hidden border-[#222] h-full">
+            <CardHeader>
+              <h2 className="text-xl font-bold">Console</h2>
+            </CardHeader>
+          </Card>
+        </div>
+        <div className="md:col-span-1 min-h-full">
+          <MiddleColumn />
+        </div>
       </div>
-    </QueryProvider>
+    </div>
   );
 }
