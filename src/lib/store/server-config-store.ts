@@ -38,7 +38,7 @@ interface ServerStartState {
 export const useServerStartStore = create<ServerStartState>((set, get) => ({
   // Initial state
   serverType: "FABRIC",
-  version: "",
+  version: "1.20.1",
   datapacks: [],
   modpack: "",
   newDatapack: "",
